@@ -1,14 +1,8 @@
-Wiki Integration
-================
+# WikiIntegration (Port of https://github.com/ResoniteModdingGroup/WikiIntegration )
 
-A [MonkeyLoader](https://github.com/MonkeyModdingTroop/MonkeyLoader) mod for
-[Resonite](https://resonite.com) that adds links to the [Resonite Wiki](https://wiki.resonite.com)
-to Components in Worker Inspectors, and ProtoFlux nodes.
+A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that does x.
 
-
-## Install
-
-First, make sure you've installed MonkeyLoader and the necessary GamePacks - combined releases can be found on the page of the Resonite GamePack here: https://github.com/ResoniteModdingGroup/MonkeyLoader.GamePacks.Resonite/releases/
-
-Then all you have to do is placing the provided `WikiIntegration.nupkg` into your `Resonite/MonkeyLoader/Mods/` folder.  
-
+## Installation
+1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).
+1. Place [WikiIntegration.dll](https://github.com/art0007i/WikiIntegration/releases/latest/download/WikiIntegration.dll) into your `rml_mods` folder. This folder should be at `C:\Program Files (x86)\Steam\steamapps\common\Resonite\rml_mods` for a default install. You can create it if it's missing, or if you launch the game once with ResoniteModLoader installed it will create the folder for you.
+1. Start the game. If you want to verify that the mod is working you can check your Resonite logs.
