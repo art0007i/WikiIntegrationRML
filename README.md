@@ -1,6 +1,6 @@
 # WikiIntegration (Port of https://github.com/ResoniteModdingGroup/WikiIntegration )
 
-A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that does x.
+A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that adds links to the Wiki to Components in Worker Inspectors, and ProtoFlux nodes.
 
 ## Installation
 1. Install [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader).

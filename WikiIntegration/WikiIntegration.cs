@@ -1,6 +1,7 @@
 using HarmonyLib;
 using ResoniteModLoader;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using FrooxEngine;
 using Elements.Core;
@@ -12,7 +13,7 @@ namespace WikiIntegration;
 
 public class WikiIntegration : ResoniteMod
 {
-    public const string VERSION = "0.1.0";
+    public const string VERSION = "0.1.1";
     public override string Name => "WikiIntegration";
     public override string Author => "Banane9 & art0007i";
     public override string Version => VERSION;
@@ -44,6 +45,7 @@ public class WikiIntegration : ResoniteMod
             if (!config.GetValue(_components)) return;
             if (worker is Slot) return;
 
+            var iworker = PreprocessWorker(worker);
             var ui = new UIBuilder(__instance.Slot.Children.Last().Children.First());
 
             RadiantUI_Constants.SetupEditorStyle(ui);
@@ -51,9 +53,9 @@ public class WikiIntegration : ResoniteMod
             ui.Style.MinWidth = 40f;
 
             var button = ui.Button(OfficialAssets.Graphics.Badges.Mentor);
-            AddTooltip(button.Slot, worker is ProtoFluxNode ? ProtoFluxLocale : ComponentLocale);
+            AddTooltip(button.Slot, iworker is ProtoFluxNode ? ProtoFluxLocale : ComponentLocale);
 
-            AddHyperlink(button.Slot, worker);
+            AddHyperlink(button.Slot, iworker);
             button.Slot.OrderOffset = config.GetValue(_componentOffset);
         }
     }
@@ -62,19 +64,24 @@ public class WikiIntegration : ResoniteMod
     [HarmonyPatch(typeof(ProtoFluxNodeVisual), nameof(ProtoFluxNodeVisual.GenerateVisual))]
     internal sealed class OpenWikiArticleButton
     {
-
+        
         private static void Postfix(ProtoFluxNodeVisual __instance, ProtoFluxNode node)
         {
+            if (!Engine.IsAprilFools && node.SupressHeaderAndFooter && node.NodeName.Contains("Relay", StringComparison.OrdinalIgnoreCase))
+                return;
+            
             if (!config.GetValue(_protoFlux)) return;
             var ui = new UIBuilder(__instance.LocalUIBuilder.Canvas);
 
             var buttonArea = ui.Panel();
             ui.IgnoreLayout();
+            
             buttonArea.AnchorMin.Value = new(1, 0);
             buttonArea.AnchorMax.Value = new(1, 0);
             buttonArea.OffsetMin.Value = new(-12, 2);
             buttonArea.OffsetMax.Value = new(-2, 12);
 
+            // creates texture for every button
             var button = ui.Image(OfficialAssets.Graphics.Badges.Mentor);
             button.Slot.AttachComponent<Button>();
             AddTooltip(button.Slot, ProtoFluxLocale);
@@ -82,35 +89,54 @@ public class WikiIntegration : ResoniteMod
             AddHyperlink(button.Slot, node);
         }
     }
+    private static IWorker PreprocessWorker(IWorker originalWorker)
+    {
+        if (originalWorker is ProtoFluxEngineProxy proxy)
+            return proxy.Node.Target ?? originalWorker;
 
-    private static void AddHyperlink(Slot slot, Worker worker)
+        return originalWorker;
+    }
+
+    private static readonly Dictionary<string, string> _nameOverrides = new()
+    {
+        { "Engine.DynamicVariables.Input", "DynamicVariableInput" },
+        { "Engine.DynamicVariables.InputWithEvents", "DynamicVariableInputWithEvents" },
+    };
+    
+    private static void AddHyperlink(Slot slot, IWorker worker)
     {
         string wikiPage;
         LocaleString reason;
 
         if (worker is ProtoFluxNode node)
         {
-            reason = ProtoFluxLocale;
             var nodeName = node.NodeName;
-
+            var overload = NodeMetadataHelper.GetMetadata(node.NodeType).Overload;
             var nodeMetadata = NodeMetadataHelper.GetMetadata(node.NodeType);
-            if (!string.IsNullOrEmpty(nodeMetadata.Overload))
+            if (!string.IsNullOrEmpty(overload))
             {
-                var overload = nodeMetadata.Overload;
-                var dotIndex = overload.LastIndexOf('.');
+                if (_nameOverrides.TryGetValue(overload, out var overrideName))
+                {
+                    nodeName = overrideName;
+                }
+                else
+                {
+                    var dotIndex = overload.LastIndexOf('.');
 
-                nodeName = dotIndex > 0 ? overload.Substring(dotIndex + 1) : nodeName;
+                    nodeName = dotIndex > 0 ? overload[(dotIndex + 1)..] : nodeName;
+                }
             }
 
             wikiPage = $"ProtoFlux:{nodeName.Replace(' ', '_')}";
+            reason = ProtoFluxLocale;
         }
         else
         {
-            reason = ComponentLocale;
             var workerName = worker.WorkerType.Name;
-
-            // Don't need to remove the `1 on generics - they redirect
+            
+            // Don't need to remove the `1 on generics - they redirect and may actually be different
             wikiPage = $"Component:{workerName}";
+            reason = ComponentLocale;
         }
 
         var hyperlink = slot.AttachComponent<Hyperlink>();
